@@ -1,7 +1,7 @@
 package eu.calabacin.kata.rockscissorspaper.controller;
 
 public enum GameControllerType {
-	TEXT(TextGameController.class), GRAPHIC(GraphicGameController.class);
+	TEXT(TextGameController.class), GRAPHIC(GraphicGameController.class), SERVER(RestGameController.class);
 
 	private Class<? extends GameController> gameControllerClass;
 

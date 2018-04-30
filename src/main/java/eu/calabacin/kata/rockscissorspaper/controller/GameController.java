@@ -20,6 +20,9 @@ public abstract class GameController {
 		if (string.equalsIgnoreCase(GraphicGameController.getName())
 				|| string.equalsIgnoreCase(GameControllerType.GRAPHIC.getText()))
 			return Optional.of(GameControllerType.GRAPHIC);
+		if (string.equalsIgnoreCase(GraphicGameController.getName())
+				|| string.equalsIgnoreCase(GameControllerType.SERVER.getText()))
+			return Optional.of(GameControllerType.SERVER);
 		return Optional.empty();
 	}
 
