@@ -40,6 +40,10 @@ public class GameService {
 		DEFAULT_GAME_TYPE = gameType;
 	}
 
+	public Map<Shape, Set<Shape>> getwinningHands() {
+		return winningHands;
+	}
+
 	public GameService() {
 		initializeWinningHands();
 	}
@@ -51,7 +55,7 @@ public class GameService {
 		winningHands.put(Shape.PAPER, Set.of(Shape.ROCK, Shape.SPOCK));
 		winningHands.put(Shape.LIZARD, Set.of(Shape.SPOCK, Shape.PAPER));
 		winningHands.put(Shape.SPOCK, Set.of(Shape.SCISSORS, Shape.ROCK));
-		this.winningHands = winningHands;
+		this.winningHands = Collections.unmodifiableMap(winningHands);
 	}
 
 	public Winner findWinner(Shape shapePlayer1, Shape shapePlayer2) {

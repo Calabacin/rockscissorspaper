@@ -6,8 +6,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
-import eu.calabacin.kata.rockscissorspaper.controller.GameControllerType;
-import eu.calabacin.kata.rockscissorspaper.controller.GameController;
+import eu.calabacin.kata.rockscissorspaper.controller.TextGameController;
 
 /*
  * Using Spring Boot is excessive for this kind of project, but I wanted to try a few things so I used it.
@@ -20,24 +19,17 @@ import eu.calabacin.kata.rockscissorspaper.controller.GameController;
 @SpringBootApplication
 public class RockscissorspaperApplication {
 
-	private static final GameControllerType DEFAULT_GAME_TYPE = GameControllerType.TEXT;
 	private static final Logger LOGGER = LoggerFactory.getLogger(RockscissorspaperApplication.class);
 
 	public static void main(String[] args) {
 		ConfigurableApplicationContext context = SpringApplication.run(RockscissorspaperApplication.class, args);
-		runAppropiateFrontend(context, args);
+		runFrontend(context, args);
 		endApplication(context);
 	}
 
-	private static void runAppropiateFrontend(ConfigurableApplicationContext context, String[] args) {
-		GameControllerType gameType;
-		if (args != null && args.length > 0) {
-			gameType = GameController.getByText(args[0]).orElse(DEFAULT_GAME_TYPE);
-		} else {
-			gameType = DEFAULT_GAME_TYPE;
-		}
+	private static void runFrontend(ConfigurableApplicationContext context, String[] args) {
 		try {
-			context.getBean(gameType.getGameControllerClass()).play();
+			context.getBean(TextGameController.class).play();
 		} catch (Throwable e) {
 			LOGGER.error("An error ocurred!", e);
 		}

@@ -7,7 +7,6 @@ import java.io.PrintStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import eu.calabacin.kata.rockscissorspaper.entities.GameType;
@@ -20,11 +19,6 @@ public class TextGameController extends GameController {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(TextGameController.class);
 
-	static {
-		NAME = "text";
-	}
-
-	@Autowired
 	private GameService gameService;
 
 	public TextGameController(GameService contestService) {
@@ -38,20 +32,17 @@ public class TextGameController extends GameController {
 
 	void play(BufferedReader input, PrintStream output) throws Throwable {
 		try {
-			Integer numberOfPlayers;
-			Winner winner;
-			Shape shapePlayer1;
-			Shape shapePlayer2;
 			while (true) {
 				GameType gameType = readGameType(input, output);
-				numberOfPlayers = readNumberOfPlayers(input, output);
-				shapePlayer1 = readShape(input, output, gameType);
+				Integer numberOfPlayers = readNumberOfPlayers(input, output);
+				Shape shapePlayer1 = readShape(input, output, gameType);
+				Shape shapePlayer2;
 				if (numberOfPlayers == 1) {
 					shapePlayer2 = gameService.randomShape(gameType);
 				} else {
 					shapePlayer2 = readShape(input, output, gameType);
 				}
-				winner = gameService.findWinner(shapePlayer1, shapePlayer2);
+				Winner winner = gameService.findWinner(shapePlayer1, shapePlayer2);
 				showResult(winner, shapePlayer1, shapePlayer2, output);
 			}
 		} catch (UserWantsToQuitException e) {
