@@ -1,7 +1,13 @@
 package eu.calabacin.kata.rockscissorspaper.service;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 
 import org.springframework.stereotype.Service;
 
@@ -11,17 +17,17 @@ import eu.calabacin.kata.rockscissorspaper.entities.Winner;
 
 @Service
 public class GameService {
-	private static final Random random = new Random();
+	private static final Random RANDOM = new Random();
+	private static final List<Shape> SHAPE_VALUES = Collections.unmodifiableList(Arrays.asList(Shape.values()));
 
 	private static GameType DEFAULT_GAME_TYPE = GameType.STANDARD;
 	private static GameService INSTANCE = null;
 
-	/*
-	 * For use outside of Spring as a library
-	 */
+	private Map<Shape, Set<Shape>> winningHands;
+
 	public static GameService getInstance() {
 		if (INSTANCE == null) {
-			synchronized (random) {
+			synchronized (RANDOM) {
 				if (INSTANCE == null) {
 					INSTANCE = new GameService();
 				}
@@ -34,38 +40,27 @@ public class GameService {
 		DEFAULT_GAME_TYPE = gameType;
 	}
 
-	/*
-	 * This method of the service changed when moving to legendary.
-	 * 
-	 * It used to be in the Shape Enum, but I didn't like logic outside of business
-	 * logic objects
-	 */
+	public GameService() {
+		initializeWinningHands();
+	}
+
+	private void initializeWinningHands() {
+		Map<Shape, Set<Shape>> winningHands = new HashMap<>();
+		winningHands.put(Shape.ROCK, Set.of(Shape.SCISSORS, Shape.LIZARD));
+		winningHands.put(Shape.SCISSORS, Set.of(Shape.PAPER, Shape.LIZARD));
+		winningHands.put(Shape.PAPER, Set.of(Shape.ROCK, Shape.SPOCK));
+		winningHands.put(Shape.LIZARD, Set.of(Shape.SPOCK, Shape.PAPER));
+		winningHands.put(Shape.SPOCK, Set.of(Shape.SCISSORS, Shape.ROCK));
+		this.winningHands = winningHands;
+	}
+
 	public Winner findWinner(Shape shapePlayer1, Shape shapePlayer2) {
-		if (shapePlayer1 == Shape.ROCK) {
-			if (shapePlayer2 == Shape.ROCK)
-				return Winner.TIE;
-			return shapePlayer2 == Shape.SCISSORS || shapePlayer2 == Shape.LIZARD ? Winner.PLAYER1 : Winner.PLAYER2;
-		}
-		if (shapePlayer1 == Shape.SCISSORS) {
-			if (shapePlayer2 == Shape.SCISSORS)
-				return Winner.TIE;
-			return shapePlayer2 == Shape.PAPER || shapePlayer2 == Shape.LIZARD ? Winner.PLAYER1 : Winner.PLAYER2;
-		}
-		if (shapePlayer1 == Shape.PAPER) {
-			if (shapePlayer2 == Shape.PAPER)
-				return Winner.TIE;
-			return shapePlayer2 == Shape.ROCK || shapePlayer2 == Shape.SPOCK ? Winner.PLAYER1 : Winner.PLAYER2;
-		}
-		if (shapePlayer1 == Shape.LIZARD) {
-			if (shapePlayer2 == Shape.LIZARD)
-				return Winner.TIE;
-			return shapePlayer2 == Shape.SPOCK || shapePlayer2 == Shape.PAPER ? Winner.PLAYER1 : Winner.PLAYER2;
-		}
-		if (shapePlayer1 == Shape.SPOCK) {
-			if (shapePlayer2 == Shape.SPOCK)
-				return Winner.TIE;
-			return shapePlayer2 == Shape.SCISSORS || shapePlayer2 == Shape.ROCK ? Winner.PLAYER1 : Winner.PLAYER2;
-		}
+		if (shapePlayer1 == shapePlayer2)
+			return Winner.TIE;
+		if (winningHands.get(shapePlayer1).contains(shapePlayer2))
+			return Winner.PLAYER1;
+		if (winningHands.get(shapePlayer2).contains(shapePlayer1))
+			return Winner.PLAYER2;
 		return Winner.TIE;
 	}
 
@@ -76,17 +71,11 @@ public class GameService {
 		return result == Winner.PLAYER1 ? Optional.of(shape1) : Optional.of(shape2);
 	}
 
-	public Shape computerPlayerChooseShape() {
-		return computerPlayerChooseShape(DEFAULT_GAME_TYPE);
+	public Shape randomShape() {
+		return randomShape(DEFAULT_GAME_TYPE);
 	}
 
-	/*
-	 * This method of the service was added when moving to legendary.
-	 * 
-	 * At first I only had computerPlayerChooseShape() with the random number code
-	 */
-	public Shape computerPlayerChooseShape(GameType gameType) {
-		int nMax = gameType == GameType.STANDARD ? 3 : 5;
-		return Shape.fromOrdinal(1 + random.nextInt(nMax));
+	public Shape randomShape(GameType gameType) {
+		return SHAPE_VALUES.get(RANDOM.nextInt(gameType.getNumShapes()));
 	}
 }

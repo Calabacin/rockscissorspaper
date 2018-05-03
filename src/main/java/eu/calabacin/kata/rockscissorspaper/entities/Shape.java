@@ -3,6 +3,7 @@ package eu.calabacin.kata.rockscissorspaper.entities;
 public enum Shape {
 	ROCK, SCISSORS, PAPER, LIZARD, SPOCK;
 
+	@Deprecated
 	public static Shape fromOrdinal(int ordinal) {
 		switch (ordinal) {
 		case 1:

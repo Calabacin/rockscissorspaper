@@ -37,17 +37,17 @@ public class TextGameController extends GameController {
 	}
 
 	void play(BufferedReader input, PrintStream output) throws Throwable {
-		Integer numberOfPlayers;
-		Shape shapePlayer1;
-		Shape shapePlayer2;
-		Winner winner;
 		try {
+			Integer numberOfPlayers;
+			Winner winner;
+			Shape shapePlayer1;
+			Shape shapePlayer2;
 			while (true) {
 				GameType gameType = readGameType(input, output);
 				numberOfPlayers = readNumberOfPlayers(input, output);
 				shapePlayer1 = readShape(input, output, gameType);
 				if (numberOfPlayers == 1) {
-					shapePlayer2 = gameService.computerPlayerChooseShape(gameType);
+					shapePlayer2 = gameService.randomShape(gameType);
 				} else {
 					shapePlayer2 = readShape(input, output, gameType);
 				}
