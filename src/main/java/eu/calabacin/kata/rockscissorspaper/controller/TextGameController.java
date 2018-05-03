@@ -1,8 +1,8 @@
 package eu.calabacin.kata.rockscissorspaper.controller;
 
-import java.io.IOException;
 import java.io.PrintStream;
 import java.util.InputMismatchException;
+import java.util.Optional;
 import java.util.Scanner;
 
 import org.slf4j.Logger;
@@ -33,14 +33,14 @@ public class TextGameController extends GameController {
 	void play(Scanner input, PrintStream output) throws Throwable {
 		try {
 			while (true) {
-				GameType gameType = readGameType(input, output);
-				Integer numberOfPlayers = readNumberOfPlayers(input, output);
-				Shape shapePlayer1 = readShape(input, output, gameType);
+				GameType gameType = readGameType(input, output).orElseThrow(UserWantsToQuitException::new);
+				Integer numberOfPlayers = readNumberOfPlayers(input, output).orElseThrow(UserWantsToQuitException::new);
+				Shape shapePlayer1 = readShape(input, output, gameType).orElseThrow(UserWantsToQuitException::new);
 				Shape shapePlayer2;
 				if (numberOfPlayers == 1) {
 					shapePlayer2 = gameService.randomShape(gameType);
 				} else {
-					shapePlayer2 = readShape(input, output, gameType);
+					shapePlayer2 = readShape(input, output, gameType).orElseThrow(UserWantsToQuitException::new);
 				}
 				Winner winner = gameService.findWinner(shapePlayer1, shapePlayer2);
 				showResult(winner, shapePlayer1, shapePlayer2, output);
@@ -54,14 +54,62 @@ public class TextGameController extends GameController {
 		}
 	}
 
-	GameType readGameType(Scanner input, PrintStream output) throws IOException, UserWantsToQuitException {
+	private void showOptions(PrintStream output, String query, Object[] enums) {
+		showOptions(output, query, enums, enums.length);
+	}
+
+	private void showOptions(PrintStream output, String query, Object[] enums, int maxOptions) {
+		output.println("---------");
+		output.println(query + ":");
+		output.println();
+		for (int i = 0; i < maxOptions; i++)
+			output.printf("%d - %s\n", i + 1, enums[i]);
+		output.println();
+		output.println("0 (Zero) to quit.");
+		output.println("---------");
+	}
+
+	Optional<GameType> readGameType(Scanner input, PrintStream output) {
 		while (true) {
-			showOptions(output, "Choose a game type", GameType.values());
-			int gameTypeInt = input.nextInt();
-			if (gameTypeInt == 0)
-				throw new UserWantsToQuitException();
-			if (--gameTypeInt < GameType.values().length)
-				return GameType.values()[gameTypeInt];
+			try {
+				showOptions(output, "Choose a game type", GameType.values());
+				int gameTypeInt = input.nextInt();
+				if (gameTypeInt == 0)
+					return Optional.empty();
+				if (--gameTypeInt < GameType.values().length)
+					return Optional.of(GameType.values()[gameTypeInt]);
+			} catch (InputMismatchException ignore) {
+			}
+
+		}
+	}
+
+	Optional<Integer> readNumberOfPlayers(Scanner input, PrintStream output) {
+		while (true) {
+			try {
+				showOptions(output, "Enter number of players", new String[] { "Play vs Computer", "Play vs Human" });
+				int numPlayers = input.nextInt();
+				if (numPlayers == 0)
+					return Optional.empty();
+				if (numPlayers > 0 && numPlayers <= 2)
+					return Optional.of(numPlayers);
+			} catch (InputMismatchException ignore) {
+			}
+
+		}
+	}
+
+	Optional<Shape> readShape(Scanner input, PrintStream output, GameType gameType) {
+		while (true) {
+			try {
+				showOptions(output, "Choose an option", Shape.values(), gameType.getNumShapes());
+				int shapeInt = input.nextInt();
+				if (shapeInt == 0)
+					return Optional.empty();
+				if (--shapeInt < Shape.values().length)
+					return Optional.of(Shape.values()[shapeInt]);
+			} catch (InputMismatchException ignore) {
+			}
 		}
 	}
 
@@ -79,51 +127,6 @@ public class TextGameController extends GameController {
 				output.println(shapePlayer2.name() + " defeats " + shapePlayer1);
 		}
 		output.println("-------------------");
-	}
-
-	private void showNumberOfPlayers(PrintStream output) {
-		output.println("Enter number of players (1-2), or enter zero (0) to quit.");
-	}
-
-	Integer readNumberOfPlayers(Scanner input, PrintStream output) throws IOException, UserWantsToQuitException {
-		Integer numPlayers = null;
-		while (numPlayers == null) {
-			showNumberOfPlayers(output);
-			int option = input.nextInt();
-			if (option == 0)
-				throw new UserWantsToQuitException();
-			if (option > 0 && option <= 2)
-				numPlayers = option;
-		}
-		return numPlayers;
-	}
-
-	private void showOptions(PrintStream output, String query, Object[] enums) {
-		showOptions(output, query, enums, enums.length);
-	}
-
-	private void showOptions(PrintStream output, String query, Object[] enums, int maxOptions) {
-		output.println("---------");
-		output.println(query + ":");
-		output.println();
-		for (int i = 0; i < maxOptions; i++)
-			output.printf("%d - %s\n", i + 1, enums[i]);
-		output.println("0 (Zero) to quit.");
-		output.println("---------");
-	}
-
-	Shape readShape(Scanner input, PrintStream output, GameType gameType) throws UserWantsToQuitException {
-		while (true) {
-			try {
-				showOptions(output, "Choose an option", Shape.values(), gameType.getNumShapes());
-				int shapeInt = input.nextInt();
-				if (shapeInt == 0)
-					throw new UserWantsToQuitException();
-				if (--shapeInt < Shape.values().length)
-					return Shape.values()[shapeInt];
-			} catch (InputMismatchException e) {
-			}
-		}
 	}
 
 	void quit(Scanner input, PrintStream output) {
