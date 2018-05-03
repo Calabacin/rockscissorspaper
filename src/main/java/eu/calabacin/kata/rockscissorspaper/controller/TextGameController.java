@@ -1,9 +1,9 @@
 package eu.calabacin.kata.rockscissorspaper.controller;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.util.InputMismatchException;
+import java.util.Scanner;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,10 +27,10 @@ public class TextGameController extends GameController {
 
 	@Override
 	public void play() throws Throwable {
-		play(new BufferedReader(new InputStreamReader(System.in)), System.out);
+		play(new Scanner(System.in), System.out);
 	}
 
-	void play(BufferedReader input, PrintStream output) throws Throwable {
+	void play(Scanner input, PrintStream output) throws Throwable {
 		try {
 			while (true) {
 				GameType gameType = readGameType(input, output);
@@ -54,30 +54,15 @@ public class TextGameController extends GameController {
 		}
 	}
 
-	GameType readGameType(BufferedReader input, PrintStream output) throws IOException, UserWantsToQuitException {
-		GameType gameType = null;
-		while (gameType == null) {
-			showGameTypeQuestion(output);
-			String line = input.readLine();
-			int shapeInt = findIntFromText(line, 2);
-			if (shapeInt == 0)
+	GameType readGameType(Scanner input, PrintStream output) throws IOException, UserWantsToQuitException {
+		while (true) {
+			showOptions(output, "Choose a game type", GameType.values());
+			int gameTypeInt = input.nextInt();
+			if (gameTypeInt == 0)
 				throw new UserWantsToQuitException();
-			if (shapeInt == 1)
-				return GameType.STANDARD;
-			if (shapeInt == 2)
-				return GameType.LEGENDARY;
+			if (--gameTypeInt < GameType.values().length)
+				return GameType.values()[gameTypeInt];
 		}
-		throw new RuntimeException("This code should never be executed");
-	}
-
-	private void showGameTypeQuestion(PrintStream output) {
-		output.println("---------");
-		output.println("Choose a game type:");
-		output.println();
-		output.println("1 - Standard");
-		output.println("2 - Legendary");
-		output.println("0 (Zero) to quit.");
-		output.println("---------");
 	}
 
 	private void showResult(Winner winner, Shape shapePlayer1, Shape shapePlayer2, PrintStream output) {
@@ -100,66 +85,59 @@ public class TextGameController extends GameController {
 		output.println("Enter number of players (1-2), or enter zero (0) to quit.");
 	}
 
-	Integer readNumberOfPlayers(BufferedReader input, PrintStream output) throws IOException, UserWantsToQuitException {
+	Integer readNumberOfPlayers(Scanner input, PrintStream output) throws IOException, UserWantsToQuitException {
 		Integer numPlayers = null;
 		while (numPlayers == null) {
 			showNumberOfPlayers(output);
-			String line = input.readLine();
-			numPlayers = findIntFromText(line, 2);
-			if (numPlayers == 0)
+			int option = input.nextInt();
+			if (option == 0)
 				throw new UserWantsToQuitException();
+			if (option > 0 && option <= 2)
+				numPlayers = option;
 		}
 		return numPlayers;
 	}
 
-	private void showOptions(PrintStream output, GameType gameType) {
+	private void showOptions(PrintStream output, String query, Object[] enums) {
+		showOptions(output, query, enums, enums.length);
+	}
+
+	private void showOptions(PrintStream output, String query, Object[] enums, int maxOptions) {
 		output.println("---------");
-		output.println("Choose an option:");
+		output.println(query + ":");
 		output.println();
-		output.println("1 - Rock");
-		output.println("2 - Scissors");
-		output.println("3 - Paper");
-		if (gameType == GameType.LEGENDARY) {
-			output.println("4 - Lizard");
-			output.println("5 - Spock");
-		}
+		for (int i = 0; i < maxOptions; i++)
+			output.printf("%d - %s\n", i + 1, enums[i]);
 		output.println("0 (Zero) to quit.");
 		output.println("---------");
 	}
 
-	Shape readShape(BufferedReader input, PrintStream output, GameType gameType) throws IOException {
-		Shape shape = null;
-		while (shape == null) {
+	Shape readShape(Scanner input, PrintStream output, GameType gameType) throws UserWantsToQuitException {
+		while (true) {
 			try {
-				showOptions(output, gameType);
-				String line = input.readLine();
-				int shapeInt = findIntFromText(line, gameType.getNumShapes());
-				shape = Shape.fromOrdinal(shapeInt);
-			} catch (NumberFormatException e) {
+				showOptions(output, "Choose an option", Shape.values(), gameType.getNumShapes());
+				int shapeInt = input.nextInt();
+				if (shapeInt == 0)
+					throw new UserWantsToQuitException();
+				if (--shapeInt < Shape.values().length)
+					return Shape.values()[shapeInt];
+			} catch (InputMismatchException e) {
 			}
 		}
-		return shape;
 	}
 
-	int findIntFromText(String line, int maxInt) throws NumberFormatException {
-		int number = Integer.parseInt(line);
-		if (number < 0 || number > maxInt)
-			throw new NumberFormatException("Number must be between 1 and " + maxInt);
-		return number;
-	}
-
-	void quit(BufferedReader input, PrintStream output) {
-		LOGGER.info("Exiting");
+	void quit(Scanner input, PrintStream output) {
 		output.println("Thank you for playing!");
+		LOGGER.info("Exiting");
 		try {
 			input.close();
 		} catch (Exception ignored) {
-			LOGGER.info("Exception closing input");
+			LOGGER.error("Exception closing input", ignored);
 		}
 		try {
 			output.close();
 		} catch (Exception ignored) {
-			LOGGER.info("Exception closing output");
+			LOGGER.error("Exception closing output", ignored);
 		}
 	}
 
